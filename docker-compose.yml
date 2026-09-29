@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: worknoon
+      POSTGRES_PASSWORD: worknoon123
+      POSTGRES_DB: refund_system
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U worknoon -d refund_system"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://worknoon:worknoon123@db:5432/refund_system
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
