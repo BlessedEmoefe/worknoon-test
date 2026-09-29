@@ -11,7 +11,12 @@ import type {
 
 /**
  * POST /api/refund
- * Submits a refund request, runs the rule-based engine, and persists the result.
+ * Submits a refund request, runs hard rules + AI evaluation, and persists the result.
+ *
+ * Flow:
+ * 1. Validate input and load customer/order
+ * 2. evaluateRefundRequest → hard-rule safety layer, then OpenAI when not hard-Denied
+ * 3. Persist decision + reasoning and return JSON
  */
 export async function POST(request: NextRequest) {
   try {
@@ -71,8 +76,8 @@ export async function POST(request: NextRequest) {
 
     const items = order.items as unknown as OrderItem[];
 
-    // --- Run rule-based evaluation ---
-    const evaluation = evaluateRefundRequest({
+    // --- Hard rules + AI (OpenAI) evaluation ---
+    const evaluation = await evaluateRefundRequest({
       order: {
         status: order.status,
         orderDate: order.orderDate,
