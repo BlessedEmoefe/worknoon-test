@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  createdAt DateTime @default(now())
+  orders    Order[]
+  refunds   RefundRequest[]
+}
+
+model Order {
+  id            String   @id @default(cuid())
+  orderNumber   String   @unique
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id])
+  items         Json     // array of { name, quantity, price, isFinalSale }
+  totalAmount   Float
+  status        String   // e.g. "delivered", "shipped", "cancelled"
+  orderDate     DateTime
+  createdAt     DateTime @default(now())
+  refunds       RefundRequest[]
+}
+
+model RefundRequest {
+  id              String   @id @default(cuid())
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id])
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id])
+  reason          String
+  customerMessage String
+  requestedAmount Float?
+  decision        String   // "Approved" | "Denied" | "Escalated"
+  aiReasoning     String
+  policyNotes     String?
+  createdAt       DateTime @default(now())
+}
