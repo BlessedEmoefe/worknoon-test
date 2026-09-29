@@ -133,18 +133,22 @@ export async function GET() {
       take: 20,
       orderBy: { createdAt: "desc" },
       include: {
-        customer: { select: { name: true } },
+        customer: { select: { name: true, email: true } },
         order: { select: { orderNumber: true } },
       },
     });
 
-    const payload = refunds.map((refund) => ({
+    const payload = refunds.map((refund: (typeof refunds)[number]) => ({
       id: refund.id,
+      createdAt: refund.createdAt.toISOString(),
       customerName: refund.customer.name,
+      customerEmail: refund.customer.email,
       orderNumber: refund.order.orderNumber,
       decision: refund.decision,
+      requestedAmount: refund.requestedAmount,
+      reason: refund.reason,
       reasoning: refund.aiReasoning,
-      createdAt: refund.createdAt.toISOString(),
+      policyNotes: refund.policyNotes,
     }));
 
     return NextResponse.json({ refunds: payload });
